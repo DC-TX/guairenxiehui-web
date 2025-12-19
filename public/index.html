@@ -1,26 +1,382 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <title>怪人协会商城</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>怪人协会商城</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* 原样 CSS，不变，略 */
+</style>
 </head>
 <body>
+<div class="notification" id="notification"></div>
 
-<h2>注册</h2>
-<input id="r-email" placeholder="邮箱">
-<input id="r-pass" placeholder="密码">
-<input id="r-name" placeholder="用户名">
-<button id="registerBtn">注册</button>
+<!-- 登录/注册模态框 -->
+<div class="modal" id="authModal">
+  <div class="modal-content">
+    <h2><i class="fas fa-shopping-cart"></i> 怪人协会商城</h2>
+    <div class="tabs">
+      <div class="tab active" data-tab="login">登录</div>
+      <div class="tab" data-tab="register">注册</div>
+    </div>
+    <form id="loginForm" class="auth-form">
+      <div class="form-group">
+        <label for="loginEmail">邮箱</label>
+        <input type="email" id="loginEmail" placeholder="请输入邮箱" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">密码</label>
+        <input type="password" id="loginPassword" placeholder="请输入密码" required>
+      </div>
+      <button type="submit" class="submit-btn">登录</button>
+      <div class="switch-form">
+        还没有账户？<a id="switchToRegister">立即注册</a>
+      </div>
+    </form>
 
-<h2>登录</h2>
-<input id="l-email" placeholder="邮箱">
-<input id="l-pass" placeholder="密码">
-<button id="loginBtn">登录</button>
+    <form id="registerForm" class="auth-form hidden">
+      <div class="form-group">
+        <label for="registerEmail">邮箱</label>
+        <input type="email" id="registerEmail" placeholder="请输入邮箱" required>
+      </div>
+      <div class="form-group">
+        <label for="registerPassword">密码</label>
+        <input type="password" id="registerPassword" placeholder="请输入密码（至少6位）" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label for="registerName">用户名</label>
+        <input type="text" id="registerName" placeholder="请输入用户名" required>
+      </div>
+      <button type="submit" class="submit-btn">注册</button>
+      <div class="switch-form">
+        已有账户？<a id="switchToLogin">立即登录</a>
+      </div>
+    </form>
+  </div>
+</div>
 
-<h2>商户</h2>
-<input id="reason" placeholder="申请理由">
-<button id="applyBtn">申请成为商户</button>
+<!-- 主页面内容 -->
+<div id="mainContent">
+  <nav class="navbar">
+    <h1>怪人商城</h1>
+    <div id="authButtons">
+      <button class="auth-btn" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i> 登录/注册
+      </button>
+    </div>
+    <div class="user-info hidden" id="userInfoNav">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <button class="logout-btn" id="logoutBtn">退出登录</button>
+    </div>
+  </nav>
 
-<script type="module" src="../src/main.js"></script>
+  <div class="user-panel" id="userPanelSection" style="display: none;">
+    <div class="user-card">
+      <div class="user-header">
+        <div class="user-details">
+          <h2 id="userName">用户名</h2>
+          <p>角色：<span id="userRole">普通用户</span></p>
+        </div>
+        <div class="points-badge">
+          <i class="fas fa-coins"></i> <span id="userPoints">0</span> 积分
+        </div>
+      </div>
+      <button class="action-btn apply-btn" id="applySellerBtn">
+        <i class="fas fa-store"></i> 申请成为商户
+      </button>
+    </div>
+
+    <div class="upload-form hidden" id="sellerFormSection">
+      <h3 class="section-title"><i class="fas fa-plus-circle"></i> 上架商品</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productName">商品名称 *</label>
+          <input type="text" id="productName" placeholder="请输入商品名称" required>
+        </div>
+        <div class="form-group">
+          <label for="productPrice">价格（积分） *</label>
+          <input type="number" id="productPrice" placeholder="所需积分" min="1" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="productDesc">商品简介 *</label>
+        <textarea id="productDesc" placeholder="请输入商品简介" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="productImage">商品图片（选填，≤2MB）</label>
+        <div class="file-input">
+          <input type="file" id="productImage" accept="image/*">
+          <div class="file-label">点击选择图片文件（可选）</div>
+        </div>
+      </div>
+      <button class="action-btn" id="submitProductBtn">
+        <i class="fas fa-upload"></i> 上架商品
+      </button>
+    </div>
+  </div>
+
+  <div class="user-panel">
+    <h3 class="section-title"><i class="fas fa-box-open"></i> 精选商品</h3>
+    <div class="products-grid" id="productsGrid"></div>
+  </div>
+</div>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, updateDoc,
+  query, orderBy, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const notificationQueue = [];
+let isNotifying = false;
+
+function showNotification(message, type='success') {
+  notificationQueue.push({ message, type });
+  if (!isNotifying) displayNextNotification();
+}
+
+function displayNextNotification() {
+  if (notificationQueue.length === 0) {
+    isNotifying = false;
+    return;
+  }
+  isNotifying = true;
+  const { message, type } = notificationQueue.shift();
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = 'notification ' + type + ' show';
+  setTimeout(() => {
+    notification.classList.remove('show');
+    displayNextNotification();
+  }, 3000);
+}
+
+// DOM
+const authModal = document.getElementById('authModal');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const userInfoNav = document.getElementById('userInfoNav');
+const authButtons = document.getElementById('authButtons');
+const userPanelSection = document.getElementById('userPanelSection');
+const authForms = document.querySelectorAll('.auth-form');
+const tabs = document.querySelectorAll('.tab');
+const switchToRegister = document.getElementById('switchToRegister');
+const switchToLogin = document.getElementById('switchToLogin');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const applySellerBtn = document.getElementById('applySellerBtn');
+const submitProductBtn = document.getElementById('submitProductBtn');
+const sellerFormSection = document.getElementById('sellerFormSection');
+const productsGrid = document.getElementById('productsGrid');
+const userAvatar = document.getElementById('userAvatar');
+const userName = document.getElementById('userName');
+const userRole = document.getElementById('userRole');
+const userPoints = document.getElementById('userPoints');
+
+function getInitials(name) { return name ? name.charAt(0).toUpperCase() : 'U'; }
+
+authModal.addEventListener('click', (e) => {
+  if (e.target === authModal) authModal.classList.remove('active');
+});
+
+function switchTab(tabName) {
+  tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab===tabName));
+  authForms.forEach(form => form.classList.toggle('hidden', !form.id.includes(tabName)));
+}
+
+async function handleLogin(email, password){
+  try{
+    await signInWithEmailAndPassword(auth, email, password);
+    authModal.classList.remove('active');
+    showNotification('登录成功！');
+  }catch(err){
+    console.error(err);
+    showNotification('登录失败：'+(err.message||'请检查邮箱和密码'), 'error');
+  }
+}
+
+async function handleRegister(email, password, name){
+  try{
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    await setDoc(doc(db,'users',user.uid),{
+      uid: user.uid,
+      email,
+      name,
+      role:'user',
+      points:1000,
+      createdAt: serverTimestamp()
+    });
+    showNotification('注册成功！请登录');
+    switchTab('login');
+  }catch(err){
+    console.error(err);
+    showNotification('注册失败：'+(err.message||'请检查信息'), 'error');
+  }
+}
+
+loginBtn.addEventListener('click', ()=> authModal.classList.add('active'));
+switchToRegister.addEventListener('click', ()=> switchTab('register'));
+switchToLogin.addEventListener('click', ()=> switchTab('login'));
+tabs.forEach(tab=>tab.addEventListener('click', ()=> switchTab(tab.dataset.tab)));
+
+loginForm.addEventListener('submit',(e)=>{
+  e.preventDefault();
+  handleLogin(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+});
+
+registerForm.addEventListener('submit',(e)=>{
+  e.preventDefault();
+  handleRegister(
+    document.getElementById('registerEmail').value,
+    document.getElementById('registerPassword').value,
+    document.getElementById('registerName').value
+  );
+});
+
+logoutBtn.addEventListener('click', async ()=>{
+  try{ await signOut(auth); showNotification('已退出登录'); }catch(err){ console.error(err); showNotification('退出失败','error'); }
+});
+
+applySellerBtn.addEventListener('click', async ()=>{
+  if(!auth.currentUser) return;
+  try{
+    const userDoc = await getDoc(doc(db,'users',auth.currentUser.uid));
+    if(userDoc.exists() && userDoc.data().role==='seller'){
+      showNotification('您已经是商户了','warning'); return;
+    }
+    await addDoc(collection(db,'sellerApplications'),{
+      userId: auth.currentUser.uid,
+      userEmail: auth.currentUser.email,
+      userName: userDoc.exists()? userDoc.data().name : auth.currentUser.displayName || '未知',
+      status:'pending',
+      appliedAt: serverTimestamp()
+    });
+    showNotification('商户申请已提交，等待管理员审核');
+  }catch(err){ console.error(err); showNotification('申请失败','error'); }
+});
+
+submitProductBtn.addEventListener('click', uploadProduct);
+
+async function uploadProduct(){
+  if(!auth.currentUser) return;
+  const name = document.getElementById('productName').value.trim();
+  const desc = document.getElementById('productDesc').value.trim();
+  const price = parseInt(document.getElementById('productPrice').value);
+  const imageFile = document.getElementById('productImage').files[0];
+
+  if(!name||!desc||!price||price<=0){ showNotification('请填写完整商品信息','warning'); return; }
+  if(imageFile && imageFile.size>2*1024*1024){ showNotification('图片不能超过2MB','warning'); return; }
+
+  try{
+    showNotification('正在上架商品...');
+    let imageUrl='';
+    if(imageFile){
+      const imageRef = ref(storage, `products/${auth.currentUser.uid}/${Date.now()}_${imageFile.name}`);
+      const snapshot = await uploadBytes(imageRef,imageFile);
+      imageUrl = await getDownloadURL(snapshot.ref);
+    }
+    const userDoc = await getDoc(doc(db,'users',auth.currentUser.uid));
+    const sellerName = userDoc.exists()? userDoc.data().name : '未知商家';
+    await addDoc(collection(db,'products'),{
+      name, description: desc, price, sellerId: auth.currentUser.uid,
+      sellerName, imageUrl, createdAt: serverTimestamp()
+    });
+    document.getElementById('productName').value='';
+    document.getElementById('productDesc').value='';
+    document.getElementById('productPrice').value='';
+    document.getElementById('productImage').value='';
+    showNotification('商品上架成功！');
+    renderProducts();
+  }catch(err){ console.error(err); showNotification('上架失败：'+(err.message||'请稍后重试'),'error'); }
+}
+
+async function renderProducts(){
+  productsGrid.innerHTML='';
+  try{
+    const productsSnapshot = await getDocs(query(collection(db,'products'), orderBy('createdAt','desc')));
+    const products = [];
+    productsSnapshot.forEach(doc=>products.push({id:doc.id,...doc.data()}));
+    if(products.length===0){ productsGrid.innerHTML='<div class="no-products">这里还什么都没有哦</div>'; return; }
+    products.forEach(product=>{
+      const card = document.createElement('div'); card.className='product-card';
+      const isUserLoggedIn = auth.currentUser;
+      const buyBtnHtml = isUserLoggedIn? `<button class="buy-btn" onclick="redeemProduct('${product.id}', ${product.price})">兑换商品</button>`:
+                                        `<button class="buy-btn" disabled>请先登录</button>`;
+      const sellerName = product.sellerName||'未知商家';
+      card.innerHTML = `
+        <div class="product-image"><img src="${product.imageUrl||'https://placehold.co/260x180/6c5ce7/white?text=商品图片'}" alt="${product.name||'商品'}"></div>
+        <div class="product-info">
+          <div class="product-name">${product.name||'未命名商品'}</div>
+          <div class="product-desc">${product.description||'暂无描述'}</div>
+          <div class="product-seller">商家：${sellerName}</div>
+          <div class="product-price"><i class="fas fa-coins"></i> ${product.price||0} 积分</div>
+          ${buyBtnHtml}
+        </div>`;
+      productsGrid.appendChild(card);
+    });
+  }catch(err){ console.error(err); productsGrid.innerHTML='<div class="no-products">加载商品失败，请稍后重试</div>'; }
+}
+
+window.redeemProduct = async function(productId, price){
+  if(!auth.currentUser){ showNotification('请先登录','warning'); return; }
+  try{
+    const userDoc = await getDoc(doc(db,'users',auth.currentUser.uid));
+    if(!userDoc.exists()){ showNotification('用户信息不存在','error'); return; }
+    const currentPoints = userDoc.data().points||0;
+    if(currentPoints<price){ showNotification('华币不足','warning'); return; }
+    await updateDoc(doc(db,'users',auth.currentUser.uid),{points:currentPoints-price});
+    await addDoc(collection(db,'redemptions'),{userId:auth.currentUser.uid, productId, pointsSpent:price, timestamp:serverTimestamp()});
+    showNotification('兑换成功！');
+    updateUserInterface();
+  }catch(err){ console.error(err); showNotification('兑换失败','error'); }
+};
+
+async function updateUserInterface(){
+  const user = auth.currentUser;
+  if(user){
+    try{
+      const userDoc = await getDoc(doc(db,'users',user.uid));
+      if(userDoc.exists()){
+        const userData = userDoc.data();
+        authButtons.classList.add('hidden'); userInfoNav.classList.remove('hidden'); userPanelSection.style.display='block';
+        const displayName = userData.name||user.email.split('@')[0]||'用户';
+        userName.textContent = displayName; userAvatar.textContent=getInitials(displayName);
+        const roleDisplay = userData.role==='admin'?'管理员':userData.role==='seller'?'商户':'普通用户';
+        userRole.textContent=roleDisplay; userPoints.textContent=userData.points||0;
+        sellerFormSection.classList.toggle('hidden',userData.role!=='seller');
+        onSnapshot(doc(db,'users',user.uid),(doc)=>{
+          if(doc.exists()) userPoints.textContent=doc.data().points||0;
+        });
+      }
+    }catch(err){ console.error(err); showNotification('加载用户信息失败','error'); }
+  }else{ authButtons.classList.remove('hidden'); userInfoNav.classList.add('hidden'); userPanelSection.style.display='none'; }
+  renderProducts();
+}
+
+onAuthStateChanged(auth, user=>{ if(user) authModal.classList.remove('active'); updateUserInterface(); });
+renderProducts();
+</script>
 </body>
 </html>
