@@ -721,6 +721,49 @@
     .product-image {
       position: relative;
     }
+    /* 图片预览区域 */
+    .image-preview {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: none; /* 初始隐藏 */
+    }
+
+    /* 上传进度条 */
+    .upload-progress {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      display: none; /* 初始隐藏 */
+    }
+
+    .upload-progress .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #dfe6e9;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .upload-progress .progress-inner {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .upload-progress .progress-text {
+      font-size: 14px;
+      color: var(--dark);
+    }
   </style>
 </head>
 <body>
@@ -1190,9 +1233,11 @@
         });
     };
     // ========== 商户功能 ==========
+    // 申请成为商户（修复版：允许被拒后重新申请）
     function applyAsSeller() {
       if (!auth.currentUser) return;
       const user = auth.currentUser;
+      
       db.ref("users/" + user.uid).once("value")
         .then(userSnapshot => {
           if (!userSnapshot.exists()) {
@@ -1204,102 +1249,261 @@
             showNotification('您已经是商户了', 'warning');
             return;
           }
-          // 检查是否已有申请
-          db.ref("sellerApplications")
-            .orderByChild("userId")
-            .equalTo(user.uid)
-            .once("value")
-            .then(appSnapshot => {
-              if (appSnapshot.exists()) {
-                showNotification('您已提交申请，请等待审核', 'warning');
-                return;
-              }
-              // 创建申请
-              db.ref("sellerApplications").push({
-                userId: user.uid,
-                email: user.email,
-                name: userData.name || '未知',
-                status: 'pending',
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-              })
-              .then(() => {
-                showNotification('商户申请已提交，等待管理员审核');
-              })
-              .catch(error => {
-                console.error('Create application error:', error);
-                showNotification('申请提交失败：' + (error.message || '请稍后重试'), 'error');
-              });
-            })
-            .catch(error => {
-              console.error('Check applications error:', error);
-              showNotification('检查申请状态失败：' + (error.message || '请稍后重试'), 'error');
-            });
+          
+          // ✅ 关键修复：不再检查是否已有申请！
+          // 允许用户随时提交新申请（即使之前被拒）
+          
+          // 直接创建新申请
+          db.ref("sellerApplications").push({
+            userId: user.uid,
+            email: user.email,
+            name: userData.name || '未知',
+            status: 'pending',
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+          })
+          .then(() => {
+            showNotification('商户申请已提交，等待管理员审核');
+          })
+          .catch(error => {
+            console.error('Create application error:', error);
+            showNotification('申请提交失败：' + (error.message || '请稍后重试'), 'error');
+          });
         })
         .catch(error => {
           console.error('User data error:', error);
           showNotification('获取用户信息失败：' + (error.message || '请稍后重试'), 'error');
         });
     }
-    function uploadProduct() {
+    function getTodayKey() {
+      const now = new Date();
+      return now.getFullYear() + 
+        String(now.getMonth() + 1).padStart(2, '0') + 
+        String(now.getDate()).padStart(2, '0');
+    }
+    // 格式化秒数为 "1分30秒"
+    function formatCooldown(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      if (mins > 0) {
+        return `${mins}分${secs}秒`;
+      }
+      return `${secs}秒`;
+    }
+    let cooldownTimer = null; // 全局倒计时定时器
+
+    // ========== 用图床上传商品图片 + 进度条 + 预览 + 限传 + 冷却 ==========
+    async function uploadProduct() {
       if (!auth.currentUser) return;
+      const user = auth.currentUser;
+      const uid = user.uid;
       const name = document.getElementById('productName').value.trim();
       const desc = document.getElementById('productDesc').value.trim();
       const price = parseInt(document.getElementById('productPrice').value);
       const imageFile = document.getElementById('productImage').files[0];
+
       if (!name || !desc || !price || price <= 0) {
         showNotification('请填写完整商品信息', 'warning');
         return;
       }
-      showNotification('正在上架商品...');
-      let uploadPromise;
+
+      // === 检查冷却时间（90秒） ===
+      const lastUploadRef = db.ref(`lastProductUpload/${uid}`);
+      try {
+        const snapshot = await lastUploadRef.once('value');
+        if (snapshot.exists()) {
+          const lastUploadTime = snapshot.val();
+          const now = Date.now();
+          const cooldownMs = 90 * 1000;
+          const remainingMs = lastUploadTime + cooldownMs - now;
+          if (remainingMs > 0) {
+            const remainingSecs = Math.ceil(remainingMs / 1000);
+            const mins = Math.floor(remainingSecs / 60);
+            const secs = remainingSecs % 60;
+            const timeStr = mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
+            showNotification(`⏳ 请等待 ${timeStr} 后再上架商品`, 'warning');
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('检查冷却时间失败:', e);
+      }
+
+      // === 检查今日是否已上传过图片 ===
       if (imageFile) {
-        // 检查文件类型
+        const todayKey = getTodayKey();
+        const uploadRef = db.ref(`dailyUploads/${uid}/${todayKey}`);
+        try {
+          const snapshot = await uploadRef.once('value');
+          if (snapshot.exists()) {
+            showNotification('⚠️ 您今天已上传过商品图片，每天限传 1 张', 'error');
+            return;
+          }
+        } catch (e) {
+          console.warn('检查上传记录失败:', e);
+        }
+      }
+
+      // === 创建预览和进度条容器 ===
+      const previewContainer = document.createElement('div');
+      previewContainer.className = 'image-preview';
+      previewContainer.style.cssText = 'margin: 15px 0; text-align: center; display: none;';
+      const previewImg = document.createElement('img');
+      previewImg.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px; display: none;';
+      previewContainer.appendChild(previewImg);
+
+      const progressBarContainer = document.createElement('div');
+      progressBarContainer.className = 'upload-progress';
+      progressBarContainer.style.cssText = 'margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; display: none;';
+      const progressLabel = document.createElement('div');
+      progressLabel.textContent = '上传进度:';
+      progressLabel.style.marginBottom = '10px';
+      const progressBar = document.createElement('div');
+      progressBar.style.cssText = 'width: 100%; height: 8px; background: #dfe6e9; border-radius: 4px; overflow: hidden;';
+      const progressInner = document.createElement('div');
+      progressInner.style.cssText = 'height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease;';
+      progressBar.appendChild(progressInner);
+      const progressText = document.createElement('div');
+      progressText.style.fontSize = '14px';
+      progressText.style.color = 'var(--dark)';
+      progressText.textContent = '0%';
+      progressBarContainer.appendChild(progressLabel);
+      progressBarContainer.appendChild(progressBar);
+      progressBarContainer.appendChild(progressText);
+
+      const form = document.querySelector('.upload-form');
+      form.insertBefore(progressBarContainer, document.getElementById('submitProductBtn'));
+      form.insertBefore(previewContainer, document.getElementById('submitProductBtn'));
+
+      let imgUrl = '';
+
+      // === 处理图片文件（预览 + 上传） ===
+      if (imageFile) {
+        // 文件校验
         if (!imageFile.type.startsWith('image/')) {
-          showNotification('请上传图片文件', 'error');
+          showNotification('请上传 JPG/PNG 等图片格式', 'error');
           return;
         }
-        const imageRef = storage.ref("products/" + auth.currentUser.uid + "/" + Date.now() + "_" + imageFile.name);
-        uploadPromise = imageRef.put(imageFile).then(snapshot => snapshot.ref.getDownloadURL());
-      } else {
-        uploadPromise = Promise.resolve('');
-      }
-      uploadPromise
-        .then(url => {
-          // 获取用户信息
-          return db.ref("users/" + auth.currentUser.uid).once("value")
-            .then(userSnapshot => {
-              if (!userSnapshot.exists()) {
-                throw new Error('用户信息不存在');
+        if (imageFile.size > 32 * 1024 * 1024) {
+          showNotification('图片不能超过 32MB', 'error');
+          return;
+        }
+
+        // 显示预览
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          previewImg.style.display = 'block';
+          previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(imageFile);
+
+        // 显示进度条
+        progressBarContainer.style.display = 'block';
+        showNotification('正在上传图片...');
+
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', 'https://api.imgbb.com/1/upload?key=221529865c2562c3e906562c52e1177d', true);
+          
+          // 监听上传进度
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = Math.round((event.loaded / event.total) * 100);
+              progressInner.style.width = `${percentComplete}%`;
+              progressText.textContent = `${percentComplete}%`;
+            }
+          };
+
+          // 发送请求
+          xhr.send(formData);
+
+          // 等待完成
+          await new Promise((resolve, reject) => {
+            xhr.onload = () => {
+              if (xhr.status === 200) {
+                resolve(xhr.responseText);
+              } else {
+                reject(new Error(`HTTP ${xhr.status}`));
               }
-              const userData = userSnapshot.val();
-              // 修复点：确保 sellerName 有值
-              const sellerName = userData.name || auth.currentUser.email.split('@')[0] || '未知商家';
-              // 保存商品
-              return db.ref("products").push({
-                name: name,
-                desc: desc,
-                price: price,
-                img: url,
-                sellerId: auth.currentUser.uid,
-                sellerName: sellerName,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                sales: 0
-              });
-            });
-        })
-        .then(() => {
-          // 清空表单
-          document.getElementById('productName').value = '';
-          document.getElementById('productDesc').value = '';
-          document.getElementById('productPrice').value = '';
-          document.getElementById('productImage').value = '';
-          showNotification('商品上架成功！');
-          renderProducts();
-        })
-        .catch(error => {
-          console.error('Upload product error:', error);
-          showNotification('上架失败：' + (error.message || '请稍后重试'), 'error');
+            };
+            xhr.onerror = () => reject(new Error('网络错误'));
+            xhr.timeout = 30000; // 30秒超时
+            xhr.ontimeout = () => reject(new Error('上传超时'));
+          });
+
+          const result = JSON.parse(xhr.responseText);
+          console.log('ImgBB 返回结果:', result);
+
+          // ✅ 严格校验 URL
+          if (result.success && result.data && typeof result.data.url === 'string' && result.data.url.trim() !== '') {
+            imgUrl = result.data.url.trim();
+            console.log('✅ 获取到图片 URL:', imgUrl);
+            progressInner.style.width = '100%';
+            progressText.textContent = '100% - 上传成功！';
+            showNotification('✅ 图片上传成功！', 'success');
+          } else {
+            throw new Error(`图床返回无效数据: ${JSON.stringify(result)}`);
+          }
+        } catch (error) {
+          console.error('ImgBB 上传失败:', error);
+          showNotification('图片上传失败: ' + (error.message || '请重试'), 'error');
+          // 清理 UI
+          progressBarContainer.remove();
+          previewContainer.remove();
+          return;
+        }
+      }
+
+      // === 保存商品到数据库 ===
+      showNotification('正在上架商品...');
+      try {
+        const userData = (await db.ref("users/" + uid).once("value")).val();
+        const sellerName = userData?.name || user.email.split('@')[0] || '未知商家';
+
+        // 写入商品
+        const newProductRef = await db.ref("products").push({
+          name: name,
+          desc: desc,
+          price: price,
+          img: imgUrl, // 可能是空字符串（无图商品）或有效 URL
+          sellerId: uid,
+          sellerName: sellerName,
+          timestamp: firebase.database.ServerValue.TIMESTAMP,
+          sales: 0
         });
+
+        // === 记录冷却时间 ===
+        await db.ref(`lastProductUpload/${uid}`).set(Date.now());
+
+        // === 记录今日上传（仅当有图）===
+        if (imageFile && imgUrl) {
+          const todayKey = getTodayKey();
+          await db.ref(`dailyUploads/${uid}/${todayKey}`).set(true);
+        }
+
+        // 清空表单
+        document.getElementById('productName').value = '';
+        document.getElementById('productDesc').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productImage').value = '';
+        
+        // 移除预览和进度条
+        progressBarContainer.remove();
+        previewContainer.remove();
+
+        showNotification('✅ 商品上架成功！90秒后可再次上架', 'success');
+        renderProducts();
+
+      } catch (error) {
+        console.error('上架失败:', error);
+        showNotification('上架失败: ' + (error.message || '请重试'), 'error');
+        // 清理 UI
+        progressBarContainer.remove();
+        previewContainer.remove();
+      }
     }
     // ========== 管理员功能 ==========
     function showAdminPanel() {
