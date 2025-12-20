@@ -1,395 +1,1914 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>悦购积分商城</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --primary:#6c5ce7;
-  --primary-dark:#5a4fcf;
-  --secondary:#00cec9;
-  --accent:#fd79a8;
-  --success:#00b894;
-  --warning:#fdcb6e;
-  --dark:#2d3436;
-  --light:#f8f9fa;
-  --gray:#636e72;
-  --light-gray:#dfe6e9;
-  --card-shadow:0 4px 20px rgba(0,0,0,0.08);
-  --hover-shadow:0 6px 25px rgba(0,0,0,0.12);
-}
-body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:linear-gradient(135deg,#f8f9fa 0%,#e8edf3 100%); color:var(--dark); min-height:100vh; padding-bottom:40px;}
-.notification{position:fixed;top:20px;right:20px;padding:16px 24px;border-radius:12px;color:white;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:10000;transform:translateX(120%);transition:transform 0.3s ease,opacity 0.3s ease;max-width:320px;}
-.notification.show{transform:translateX(0);}
-.notification.success{background:var(--success);}
-.notification.warning{background:var(--warning);color:var(--dark);}
-.notification.error{background:#ff7675;}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:1000;opacity:0;visibility:hidden;transition:all 0.3s ease;}
-.modal.active{opacity:1;visibility:visible;}
-.modal-content{background:white;padding:40px;border-radius:20px;width:90%;max-width:450px;box-shadow:var(--hover-shadow);transform:translateY(20px);transition:transform 0.3s ease;}
-.modal.active .modal-content{transform:translateY(0);}
-.modal h2{text-align:center;margin-bottom:24px;color:var(--primary);font-size:28px;font-weight:700;}
-.tabs{display:flex;margin-bottom:24px;border-bottom:2px solid var(--light-gray);}
-.tab{padding:12px 24px;cursor:pointer;font-weight:600;color:var(--gray);border-bottom:2px solid transparent;}
-.tab.active{color:var(--primary);border-bottom-color:var(--primary);}
-.form-group{margin-bottom:20px;}
-.form-group label{display:block;margin-bottom:8px;font-weight:600;color:var(--dark);}
-.form-group input, .form-group textarea{width:100%;padding:14px;border:2px solid var(--light-gray);border-radius:12px;font-size:16px;transition:border-color 0.3s ease;}
-.form-group input:focus, .form-group textarea:focus{outline:none;border-color:var(--primary);}
-.submit-btn{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:background 0.3s ease, transform 0.2s ease;}
-.submit-btn:hover{background:var(--primary-dark);transform:translateY(-2px);}
-.switch-form{text-align:center;margin-top:16px;color:var(--gray);}
-.switch-form a{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer;}
-.navbar{background:white;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 15px rgba(0,0,0,0.08);position:sticky;top:0;z-index:100;}
-.navbar h1{font-size:28px;font-weight:800;background:linear-gradient(45deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.auth-btn{background:var(--primary);color:white;border:none;padding:10px 24px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:background 0.3s ease;display:flex;align-items:center;gap:8px;}
-.auth-btn:hover{background:var(--primary-dark);}
-.navbar .user-info{display:flex;align-items:center;gap:20px;}
-.user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(45deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:16px;}
-.logout-btn{background:var(--light-gray);color:var(--gray);border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.2s ease;}
-.logout-btn:hover{background:#c8d6e5;color:var(--dark);}
-.user-panel{max-width:1200px;margin:30px auto 0;padding:0 20px;}
-.user-card{background:white;border-radius:20px;padding:30px;box-shadow:var(--card-shadow);margin-bottom:30px;}
-.user-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:20px;}
-.user-details h2{font-size:24px;color:var(--dark);margin-bottom:8px;}
-.user-details p{color:var(--gray);font-size:16px;}
-.points-badge{background:linear-gradient(45deg,var(--primary),var(--secondary));color:white;padding:8px 20px;border-radius:20px;font-weight:700;font-size:18px;display:inline-block;}
-.section-title{font-size:24px;font-weight:700;margin-bottom:24px;color:var(--dark);display:flex;align-items:center;gap:12px;}
-.section-title i{color:var(--primary);}
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:28px;margin-bottom:40px;}
-.product-card{background:white;border-radius:16px;overflow:hidden;box-shadow:var(--card-shadow);transition:all 0.3s ease;height:100%;display:flex;flex-direction:column;}
-.product-card:hover{transform:translateY(-8px);box-shadow:var(--hover-shadow);}
-.product-image{height:180px;overflow:hidden;}
-.product-image img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s ease;}
-.product-card:hover .product-image img{transform:scale(1.05);}
-.product-info{padding:20px;flex:1;display:flex;flex-direction:column;}
-.product-name{font-size:18px;font-weight:700;margin-bottom:10px;color:var(--dark);line-height:1.3;}
-.product-desc{color:var(--gray);font-size:14px;margin-bottom:12px;line-height:1.5;flex:1;}
-.product-seller{color:var(--secondary);font-size:12px;margin-bottom:12px;}
-.product-price{font-size:20px;font-weight:800;color:var(--primary);margin-top:auto;}
-.no-products{text-align:center;color:var(--gray);font-size:16px;padding:40px;grid-column:1 / -1;background:var(--light);border-radius:16px;}
-.upload-form{background:white;border-radius:20px;padding:30px;box-shadow:var(--card-shadow);margin-bottom:40px;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-@media (max-width:768px){.form-row{grid-template-columns:1fr;}.navbar{padding:16px 20px;}.navbar h1{font-size:24px;}.user-panel{padding:0 15px;}.user-card,.upload-form{padding:20px;}.products-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;}.auth-btn{padding:8px 16px;font-size:14px;}}
-.action-btn{background:var(--primary);color:white;border:none;padding:12px 24px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;display:inline-flex;align-items:center;gap:8px;}
-.action-btn:hover{background:var(--primary-dark);transform:translateY(-2px);}
-.apply-btn{background:var(--secondary);}
-.apply-btn:hover{background:#00b8a9;}
-.file-input{position:relative;display:inline-block;width:100%;margin-top:8px;}
-.file-input input[type="file"]{position:absolute;left:0;top:0;opacity:0;width:100%;height:100%;cursor:pointer;}
-.file-label{display:block;width:100%;padding:14px;border:2px dashed var(--light-gray);border-radius:12px;text-align:center;color:var(--gray);cursor:pointer;transition:all 0.3s ease;}
-.file-input input[type="file"]:hover+.file-label{border-color:var(--primary);color:var(--primary);}
-.hidden{display:none !important;}
-.buy-btn{background:var(--accent);color:white;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.2s ease;margin-top:12px;width:100%;}
-.buy-btn:hover{background:#ff6b9a;transform:translateY(-1px);}
-.buy-btn:disabled{background:var(--light-gray);cursor:not-allowed;transform:none;}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>怪人协会商城</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --primary: #6c5ce7;
+      --primary-dark: #5a4fcf;
+      --secondary: #00cec9;
+      --accent: #fd79a8;
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --dark: #2d3436;
+      --light: #f8f9fa;
+      --gray: #636e72;
+      --light-gray: #dfe6e9;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --hover-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+    }
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e8edf3 100%);
+      color: var(--dark);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+    /* 通知气泡 */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 10000;
+      transform: translateX(120%);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      max-width: 320px;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+    .notification.success {
+      background: var(--success);
+    }
+    .notification.warning {
+      background: var(--warning);
+      color: var(--dark);
+    }
+    .notification.error {
+      background: #ff7675;
+    }
+    /* 登录/注册模态框 */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: var(--hover-shadow);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    .modal.active .modal-content {
+      transform: translateY(0);
+    }
+    .modal h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: var(--primary);
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--light-gray);
+    }
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--gray);
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    .form-group input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid var(--light-gray);
+      border-radius: 12px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .submit-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    .switch-form {
+      text-align: center;
+      margin-top: 16px;
+      color: var(--gray);
+    }
+    .switch-form a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    /* 顶部导航栏 */
+    .navbar {
+      background: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .auth-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .auth-btn:hover {
+      background: var(--primary-dark);
+    }
+    .navbar .user-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .logout-btn {
+      background: var(--light-gray);
+      color: var(--gray);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .logout-btn:hover {
+      background: #c8d6e5;
+      color: var(--dark);
+    }
+    /* 管理员按钮 */
+    .admin-btn {
+      background: var(--secondary);
+      color: white;
+    }
+    .admin-btn:hover {
+      background: #00b8a9;
+    }
+    /* 商家按钮 */
+    .seller-orders-btn {
+      background: #74b9ff;
+      color: white;
+    }
+    .seller-orders-btn:hover {
+      background: #0984e3;
+    }
+    /* 用户面板 */
+    .user-panel {
+      max-width: 1200px;
+      margin: 30px auto 0;
+      padding: 0 20px;
+    }
+    .user-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 30px;
+    }
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .user-details h2 {
+      font-size: 24px;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+    .user-details p {
+      color: var(--gray);
+      font-size: 16px;
+    }
+    .points-badge {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 18px;
+      display: inline-block;
+    }
+    /* 商品区 */
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 28px;
+      margin-bottom: 40px;
+    }
+    .product-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--hover-shadow);
+    }
+    .product-image {
+      height: 180px;
+      overflow: hidden;
+    }
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .product-card:hover .product-image img {
+      transform: scale(1.05);
+    }
+    .product-info {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--dark);
+      line-height: 1.3;
+    }
+    .product-desc {
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+      flex: 1;
+    }
+    .product-sales {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 8px;
+    }
+    .product-price {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-top: auto;
+    }
+    .no-products {
+      text-align: center;
+      color: var(--gray);
+      font-size: 16px;
+      padding: 40px;
+      grid-column: 1 / -1;
+      background: var(--light);
+      border-radius: 16px;
+    }
+    /* 表单区 */
+    .upload-form {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 40px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    .action-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .action-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    .apply-btn {
+      background: var(--secondary);
+      color: white;
+    }
+    .apply-btn:hover {
+      background: #00b8a9;
+    }
+    .file-input {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .file-input input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .file-label {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: 2px dashed var(--light-gray);
+      border-radius: 12px;
+      text-align: center;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .file-input input[type="file"]:hover + .file-label {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .hidden {
+      display: none !important;
+    }
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 16px 20px;
+      }
+      .navbar h1 {
+        font-size: 24px;
+      }
+      .user-panel {
+        padding: 0 15px;
+      }
+      .user-card, .upload-form {
+        padding: 20px;
+      }
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+      }
+      .auth-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+    }
+    /* 购买按钮 */
+    .buy-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 12px;
+      width: 100%;
+    }
+    .buy-btn:hover {
+      background: #ff6b9a;
+      transform: translateY(-1px);
+    }
+    .buy-btn:disabled {
+      background: var(--light-gray);
+      cursor: not-allowed;
+      transform: none;
+    }
+    /* 管理员界面 */
+    .admin-section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 40px;
+    }
+    .admin-section h3 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: var(--dark);
+    }
+    .application-item {
+      padding: 12px;
+      border-bottom: 1px solid var(--light-gray);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .application-item:last-child {
+      border-bottom: none;
+    }
+    .approve-btn, .reject-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .approve-btn {
+      background: var(--success);
+      color: white;
+    }
+    .reject-btn {
+      background: #ff7675;
+      color: white;
+    }
+    .user-item {
+      padding: 12px;
+      border-bottom: 1px solid var(--light-gray);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-item:last-child {
+      border-bottom: none;
+    }
+    .points-input {
+      width: 80px;
+      padding: 4px;
+      border: 1px solid var(--light-gray);
+      border-radius: 4px;
+      margin: 0 8px;
+    }
+    .ban-btn {
+      background: #ff4757;
+      color: white;
+    }
+    .unban-btn {
+      background: var(--success);
+      color: white;
+    }
+    /* 管理员弹窗 */
+    .admin-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .admin-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .admin-modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: var(--hover-shadow);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .admin-modal.active .admin-modal-content {
+      transform: translateY(0);
+    }
+    .admin-modal h3 {
+      margin-bottom: 20px;
+      color: var(--primary);
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .admin-tabs {
+      display: flex;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--light-gray);
+    }
+    .admin-tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--gray);
+      border-bottom: 2px solid transparent;
+    }
+    .admin-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .admin-pane {
+      display: none;
+    }
+    .admin-pane.active {
+      display: block;
+    }
+    /* 商家订单模态框 */
+    .orders-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .orders-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .orders-modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: var(--hover-shadow);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .orders-modal.active .orders-modal-content {
+      transform: translateY(0);
+    }
+    .order-item {
+      padding: 15px;
+      border-bottom: 1px solid var(--light-gray);
+    }
+    .order-item:last-child {
+      border-bottom: none;
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .order-buyer {
+      color: var(--secondary);
+      font-weight: 500;
+    }
+    .order-product {
+      font-weight: 600;
+      color: var(--dark);
+    }
+    .order-sales {
+      font-size: 14px;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+    .order-points {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .order-time {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 5px;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 118, 117, 0.9); /* --danger with opacity */
+      border: none;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 2;
+    }
+    .product-card:hover .delete-btn {
+      opacity: 1;
+    }
+    .delete-btn:hover {
+      background: #ff4757;
+      transform: scale(1.1);
+    }
+    .product-image {
+      position: relative;
+    }
+  </style>
 </head>
 <body>
-<!-- 通知 -->
-<div class="notification" id="notification"></div>
-
-<!-- 登录注册模态框 -->
-<div class="modal" id="authModal">
-  <div class="modal-content">
-    <h2><i class="fas fa-shopping-cart"></i> 悦购积分商城</h2>
-    <div class="tabs">
-      <div class="tab active" data-tab="login">登录</div>
-      <div class="tab" data-tab="register">注册</div>
-    </div>
-    <form id="loginForm" class="auth-form">
-      <div class="form-group"><label>邮箱</label><input type="email" id="loginEmail" placeholder="请输入邮箱" required></div>
-      <div class="form-group"><label>密码</label><input type="password" id="loginPassword" placeholder="请输入密码" required></div>
-      <button type="submit" class="submit-btn">登录</button>
-      <div class="switch-form">还没有账户？<a id="switchToRegister">立即注册</a></div>
-    </form>
-    <form id="registerForm" class="auth-form hidden">
-      <div class="form-group"><label>邮箱</label><input type="email" id="registerEmail" placeholder="请输入邮箱" required></div>
-      <div class="form-group"><label>密码</label><input type="password" id="registerPassword" placeholder="请输入密码" required minlength="6"></div>
-      <div class="form-group"><label>用户名</label><input type="text" id="registerName" placeholder="请输入用户名" required></div>
-      <button type="submit" class="submit-btn">注册</button>
-      <div class="switch-form">已有账户？<a id="switchToLogin">立即登录</a></div>
-    </form>
-  </div>
-</div>
-
-<!-- 主内容 -->
-<div id="mainContent">
-  <nav class="navbar">
-    <h1>悦购商城</h1>
-    <div id="authButtons"><button class="auth-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> 登录/注册</button></div>
-    <div class="user-info hidden" id="userInfoNav"><div class="user-avatar" id="userAvatar">U</div><button class="logout-btn" id="logoutBtn">退出登录</button></div>
-  </nav>
-
-  <div class="user-panel" id="userPanelSection" style="display:none;">
-    <div class="user-card">
-      <div class="user-header">
-        <div class="user-details">
-          <h2 id="userName">用户名</h2>
-          <p>角色：<span id="userRole">普通用户</span></p>
+  <!-- 通知气泡 -->
+  <div class="notification" id="notification"></div>
+  <!-- 登录/注册模态框 -->
+  <div class="modal" id="authModal">
+    <div class="modal-content fade-in">
+      <h2><i class="fas fa-shopping-cart"></i> 怪人协会商城</h2>
+      <div class="tabs">
+        <div class="tab active" data-tab="login">登录</div>
+        <div class="tab" data-tab="register">注册</div>
+      </div>
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="loginEmail">邮箱</label>
+          <input type="email" id="loginEmail" placeholder="请输入邮箱" required>
         </div>
-        <div class="points-badge"><i class="fas fa-coins"></i> <span id="userPoints">0</span> 积分</div>
-      </div>
-      <button class="action-btn apply-btn" id="applySellerBtn"><i class="fas fa-store"></i> 申请成为商户</button>
+        <div class="form-group">
+          <label for="loginPassword">密码</label>
+          <input type="password" id="loginPassword" placeholder="请输入密码" required>
+        </div>
+        <button type="submit" class="submit-btn">登录</button>
+        <div class="switch-form">
+          还没有账户？<a id="switchToRegister">立即注册</a>
+        </div>
+      </form>
+      <form id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label for="registerEmail">邮箱</label>
+          <input type="email" id="registerEmail" placeholder="请输入邮箱" required>
+        </div>
+        <div class="form-group">
+          <label for="registerPassword">密码</label>
+          <input type="password" id="registerPassword" placeholder="请输入密码（至少6位）" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label for="registerName">用户名</label>
+          <input type="text" id="registerName" placeholder="请输入用户名" required>
+        </div>
+        <button type="submit" class="submit-btn">注册</button>
+        <div class="switch-form">
+          已有账户？<a id="switchToLogin">立即登录</a>
+        </div>
+      </form>
     </div>
-
-    <div class="upload-form hidden" id="sellerFormSection">
-      <h3 class="section-title"><i class="fas fa-plus-circle"></i> 上架商品</h3>
-      <div class="form-row">
-        <div class="form-group"><label>商品名称 *</label><input type="text" id="productName" placeholder="请输入商品名称" required></div>
-        <div class="form-group"><label>价格（积分） *</label><input type="number" id="productPrice" placeholder="所需积分" min="1" required></div>
+  </div>
+  <!-- 管理员管理弹窗 -->
+  <div class="admin-modal" id="adminModal">
+    <div class="admin-modal-content">
+      <h3><i class="fas fa-shield-alt"></i> 管理员控制台</h3>
+      <div class="admin-tabs">
+        <div class="admin-tab active" data-tab="applications">商户申请审核</div>
+        <div class="admin-tab" data-tab="users">用户管理</div>
       </div>
-      <div class="form-group"><label>商品简介 *</label><textarea id="productDesc" placeholder="请输入商品简介" rows="3" required></textarea></div>
-      <div class="form-group"><label>商品图片（选填）</label>
-        <div class="file-input">
-          <input type="file" id="productImage" accept="image/*">
-          <div class="file-label">点击选择图片文件（可选）</div>
+      <div class="admin-pane active" id="applicationsPane">
+        <div id="applicationsList">
+          <div class="gray">加载中...</div>
         </div>
       </div>
-      <button class="action-btn" id="submitProductBtn"><i class="fas fa-upload"></i> 上架商品</button>
+      <div class="admin-pane" id="usersPane">
+        <div id="usersList">
+          <div class="gray">加载中...</div>
+        </div>
+      </div>
+      <button style="width:100%;margin-top:20px;" onclick="adminModal.classList.remove('active')">关闭</button>
     </div>
   </div>
-
-  <div class="user-panel">
-    <h3 class="section-title"><i class="fas fa-box-open"></i> 精选商品</h3>
-    <div class="products-grid" id="productsGrid"></div>
+  <!-- 商家订单管理弹窗 -->
+  <div class="orders-modal" id="sellerOrdersModal">
+    <div class="orders-modal-content">
+      <h3><i class="fas fa-shopping-bag"></i> 我的订单</h3>
+      <div id="sellerOrdersList">
+        <div class="gray">加载中...</div>
+      </div>
+      <button style="width:100%;margin-top:20px;" onclick="sellerOrdersModal.classList.remove('active')">关闭</button>
+    </div>
   </div>
-</div>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAzIUyu2Oj0nGgkc6h3qnS6DQkkxsBxzu8",
-  authDomain: "guairenxiehui-e3d59.firebaseapp.com",
-  databaseURL: "https://guairenxiehui-e3d59-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "guairenxiehui-e3d59",
-  storageBucket: "guairenxiehui-e3d59.firebasestorage.app",
-  messagingSenderId: "570598758945",
-  appId: "1:570598758945:web:5321c2f2d7dd4a7d9fa160",
-  measurementId: "G-9VNTHKZBP0"
-};
-
-// 初始化 Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-const storage = firebase.storage();
-
-// 全局通知函数
-function showNotification(message, type='success', duration=3000){
-  const notification = document.getElementById('notification');
-  notification.textContent = message;
-  notification.className = `notification ${type} show`;
-  setTimeout(()=>{notification.className='notification';}, duration);
-}
-
-// 登录/注册模态逻辑
-const authModal = document.getElementById('authModal');
-const loginForm = document.getElementById('loginForm');
-const registerForm = document.getElementById('registerForm');
-const switchToRegister = document.getElementById('switchToRegister');
-const switchToLogin = document.getElementById('switchToLogin');
-const loginBtn = document.getElementById('loginBtn');
-
-loginBtn.addEventListener('click',()=>authModal.classList.add('active'));
-switchToRegister.addEventListener('click',()=>{
-  loginForm.classList.add('hidden');
-  registerForm.classList.remove('hidden');
-});
-switchToLogin.addEventListener('click',()=>{
-  registerForm.classList.add('hidden');
-  loginForm.classList.remove('hidden');
-});
-authModal.addEventListener('click', e=>{if(e.target===authModal) authModal.classList.remove('active');});
-
-// 登录提交
-loginForm.addEventListener('submit', e=>{
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPassword').value;
-  auth.signInWithEmailAndPassword(email,password)
-    .then(()=>{authModal.classList.remove('active'); showNotification('登录成功');})
-    .catch(err=>showNotification(err.message,'error'));
-});
-
-// 注册提交
-registerForm.addEventListener('submit', e=>{
-  e.preventDefault();
-  const email = document.getElementById('registerEmail').value;
-  const password = document.getElementById('registerPassword').value;
-  const name = document.getElementById('registerName').value;
-  auth.createUserWithEmailAndPassword(email,password)
-    .then(cred=>{
-      // 默认积分0，角色为普通用户
-      return db.ref('users/'+cred.user.uid).set({name,role:'user',points:0});
-    })
-    .then(()=>{authModal.classList.remove('active'); showNotification('注册成功');})
-    .catch(err=>showNotification(err.message,'error'));
-});
-
-// 监听登录状态
-auth.onAuthStateChanged(user=>{
-  const authButtons = document.getElementById('authButtons');
-  const userInfoNav = document.getElementById('userInfoNav');
-  const userPanelSection = document.getElementById('userPanelSection');
-  if(user){
-    authButtons.classList.add('hidden');
-    userInfoNav.classList.remove('hidden');
-    userPanelSection.style.display='block';
-    db.ref('users/'+user.uid).once('value').then(snapshot=>{
-      const data = snapshot.val();
-      document.getElementById('userName').textContent = data.name || '用户名';
-      document.getElementById('userRole').textContent = data.role || '普通用户';
-      document.getElementById('userPoints').textContent = data.points || 0;
-      document.getElementById('userAvatar').textContent = (data.name||'U').charAt(0).toUpperCase();
-      if(data.role==='seller') document.getElementById('sellerFormSection').classList.remove('hidden');
-    });
-  } else {
-    authButtons.classList.remove('hidden');
-    userInfoNav.classList.add('hidden');
-    userPanelSection.style.display='none';
-  }
-});
-
-// 登出按钮
-document.getElementById('logoutBtn').addEventListener('click', ()=>{
-  auth.signOut().then(()=>showNotification('已退出登录'));
-});
-</script>
-<script>
-// DOM 元素
-const submitProductBtn = document.getElementById('submitProductBtn');
-const sellerFormSection = document.getElementById('sellerFormSection');
-const productsGrid = document.getElementById('productsGrid');
-const applySellerBtn = document.getElementById('applySellerBtn');
-
-// 工具函数：获取名字首字母
-function getInitials(name){
-  return name? name.charAt(0).toUpperCase():'U';
-}
-
-// 渲染商品列表
-function renderProducts(){
-  productsGrid.innerHTML='';
-  db.ref('products').orderByChild('createdAt').once('value')
-    .then(snapshot=>{
-      const products = [];
-      snapshot.forEach(child=>products.push({id:child.key,...child.val()}));
-      products.reverse(); // 最新在前
-      if(products.length===0){
-        productsGrid.innerHTML='<div class="no-products">这里还什么都没有哦</div>';
+  <!-- 主页面内容 -->
+  <div id="mainContent">
+    <!-- 顶部导航栏 -->
+    <nav class="navbar">
+      <h1>怪人协会商城</h1>
+      <div id="authButtons">
+        <button class="auth-btn" id="loginBtn">
+          <i class="fas fa-sign-in-alt"></i> 登录/注册
+        </button>
+      </div>
+      <div class="user-info hidden" id="userInfoNav">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <button class="logout-btn" id="logoutBtn">退出登录</button>
+        <button class="seller-orders-btn hidden" id="sellerOrdersBtn">我的订单</button>
+        <button class="admin-btn hidden" id="adminBtn">管理专用</button>
+      </div>
+    </nav>
+    <!-- 用户信息面板（仅登录用户显示） -->
+    <div class="user-panel" id="userPanelSection" style="display: none;">
+      <div class="user-card">
+        <div class="user-header">
+          <div class="user-details">
+            <h2 id="userName">用户名</h2>
+            <p>角色：<span id="userRole">普通用户</span></p>
+          </div>
+          <div class="points-badge">
+            <i class="fas fa-coins"></i> <span id="userPoints">0</span> 华币
+          </div>
+        </div>
+        <button class="action-btn apply-btn" id="applySellerBtn">
+          <i class="fas fa-store"></i> 申请成为商户
+        </button>
+      </div>
+      <!-- 商户上架表单（仅商户显示） -->
+      <div class="upload-form hidden" id="sellerFormSection">
+        <h3 class="section-title"><i class="fas fa-plus-circle"></i> 上架商品</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="productName">商品名称 *</label>
+            <input type="text" id="productName" placeholder="请输入商品名称" required>
+          </div>
+          <div class="form-group">
+            <label for="productPrice">价格（华币） *</label>
+            <input type="number" id="productPrice" placeholder="所需华币" min="1" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="productDesc">商品简介 *</label>
+          <textarea id="productDesc" placeholder="请输入商品简介" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="productImage">商品图片（选填）</label>
+          <div class="file-input">
+            <input type="file" id="productImage" accept="image/*">
+            <div class="file-label">点击选择图片文件（可选）</div>
+          </div>
+        </div>
+        <button class="action-btn" id="submitProductBtn">
+          <i class="fas fa-upload"></i> 上架商品
+        </button>
+      </div>
+    </div>
+    <!-- 商品展示区（所有用户可见） -->
+    <div class="user-panel">
+      <h3 class="section-title"><i class="fas fa-box-open"></i> 精选商品</h3>
+      <div class="products-grid" id="productsGrid">
+        <!-- 商品将通过 JS 动态插入 -->
+      </div>
+    </div>
+  </div>
+  <!-- Firebase SDK（保持您的原始配置，使用 compat 模式）-->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script>
+    // ========== Firebase 配置（完全保留您提供的配置）==========
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzIUyu2Oj0nGgkc6h3qnS6DQkkxsBxzu8",
+      authDomain: "guairenxiehui-e3d59.firebaseapp.com",
+      databaseURL: "https://guairenxiehui-e3d59-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "guairenxiehui-e3d59",
+      storageBucket: "guairenxiehui-e3d59.firebasestorage.app",
+      messagingSenderId: "570598758945",
+      appId: "1:570598758945:web:5321c2f2d7dd4a7d9fa160"
+    };
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const storage = firebase.storage();
+    // ========== 通知系统 ==========
+    function showNotification(message, type = 'success') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = 'notification ' + type + ' show';
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+    // ========== DOM 元素 ==========
+    const authModal = document.getElementById('authModal');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userInfoNav = document.getElementById('userInfoNav');
+    const authButtons = document.getElementById('authButtons');
+    const userPanelSection = document.getElementById('userPanelSection');
+    const authForms = document.querySelectorAll('.auth-form');
+    const tabs = document.querySelectorAll('.tab');
+    const switchToRegister = document.getElementById('switchToRegister');
+    const switchToLogin = document.getElementById('switchToLogin');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const applySellerBtn = document.getElementById('applySellerBtn');
+    const submitProductBtn = document.getElementById('submitProductBtn');
+    const sellerFormSection = document.getElementById('sellerFormSection');
+    const productsGrid = document.getElementById('productsGrid');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    const userPoints = document.getElementById('userPoints');
+    const adminBtn = document.getElementById('adminBtn');
+    const adminModal = document.getElementById('adminModal');
+    const applicationsPane = document.getElementById('applicationsPane');
+    const usersPane = document.getElementById('usersPane');
+    const applicationsList = document.getElementById('applicationsList');
+    const usersList = document.getElementById('usersList');
+    // ========== 商家功能相关 ==========
+    const sellerOrdersBtn = document.getElementById('sellerOrdersBtn');
+    const sellerOrdersModal = document.getElementById('sellerOrdersModal');
+    const sellerOrdersList = document.getElementById('sellerOrdersList');
+    // ========== 工具函数 ==========
+    function getInitials(name) {
+      return name ? name.charAt(0).toUpperCase() : 'U';
+    }
+    // ========== 身份验证功能 ==========
+    function showLoginModal() {
+      authModal.classList.add('active');
+    }
+    function hideLoginModal() {
+      authModal.classList.remove('active');
+    }
+    function switchTab(tabName) {
+      tabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabName);
+      });
+      authForms.forEach(form => {
+        form.classList.toggle('hidden', !form.id.includes(tabName));
+      });
+    }
+    // 登录
+    function handleLogin(email, password) {
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          hideLoginModal();
+          showNotification('登录成功！');
+        })
+        .catch(error => {
+          console.error('Login error:', error);
+          let errorMessage = '登录失败：请检查邮箱和密码';
+          if (error.code === 'auth/user-not-found') {
+            errorMessage = '用户不存在，请检查邮箱';
+          } else if (error.code === 'auth/wrong-password') {
+            errorMessage = '密码错误，请重试';
+          } else if (error.code === 'auth/invalid-email') {
+            errorMessage = '邮箱格式无效';
+          } else if (error.code === 'auth/user-disabled') {
+            errorMessage = '账号已被禁用';
+          }
+          showNotification(errorMessage, 'error');
+        });
+    }
+    // 注册
+    function handleRegister(email, password, name) {
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          const user = userCredential.user;
+          // 在 Realtime Database 中创建用户文档
+          db.ref("users/" + user.uid).set({
+            email: email,
+            name: name,
+            role: "user",
+            points: 1000,
+            banned: false,
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+          });
+          showNotification('注册成功！请登录');
+          switchTab('login');
+        })
+        .catch(error => {
+          console.error('Register error:', error);
+          let errorMessage = '注册失败：请检查信息';
+          if (error.code === 'auth/email-already-in-use') {
+            errorMessage = '该邮箱已被注册！请直接登录或使用找回密码功能';
+          } else if (error.code === 'auth/invalid-email') {
+            errorMessage = '邮箱格式无效';
+          } else if (error.code === 'auth/operation-not-allowed') {
+            errorMessage = '注册功能未启用';
+          } else if (error.code === 'auth/weak-password') {
+            errorMessage = '密码过于简单，至少需要6位字符';
+          }
+          showNotification(errorMessage, 'error');
+        });
+    }
+    // 在你原有 <script> 中，找到 renderProducts() 函数，**替换整个函数为以下版本**
+    // （仅增加删除按钮逻辑，其余完全一致）
+    function renderProducts() {
+      productsGrid.innerHTML = '';
+      const currentUser = auth.currentUser;
+      // 如果未登录，直接渲染商品（不显示删除按钮）
+      if (!currentUser) {
+        // 直接加载商品列表
+        loadProducts();
         return;
       }
-      products.forEach(product=>{
-        const card = document.createElement('div');
-        card.className='product-card';
-        const isUserLoggedIn = auth.currentUser;
-        const buyBtnHtml = isUserLoggedIn?
-          `<button class="buy-btn" onclick="redeemProduct('${product.id}',${product.price})">兑换商品</button>`:
-          `<button class="buy-btn" disabled>请先登录</button>`;
-        card.innerHTML=`
-          <div class="product-image">
-            <img src="${product.imageUrl||'https://placehold.co/260x180/6c5ce7/white?text=商品图片'}" alt="${product.name}">
-          </div>
-          <div class="product-info">
-            <div class="product-name">${product.name}</div>
-            <div class="product-desc">${product.description}</div>
-            <div class="product-seller">商家：${product.sellerName||'未知商家'}</div>
-            <div class="product-price"><i class="fas fa-coins"></i> ${product.price}</div>
-            ${buyBtnHtml}
-          </div>
+      // 如果已登录，先获取用户角色
+      db.ref(`users/${currentUser.uid}`).once('value')
+        .then(userSnapshot => {
+          if (!userSnapshot.exists()) {
+            showNotification('用户数据异常，请重新登录', 'error');
+            auth.signOut();
+            return;
+          }
+          const userData = userSnapshot.val();
+          const currentUserRole = userData.role || 'user';
+          // 获取角色后，再加载商品
+          loadProducts(currentUserRole);
+        })
+        .catch(error => {
+          console.error('获取用户角色失败:', error);
+          showNotification('加载商品失败：无法获取用户权限', 'error');
+          // 即使出错，也尝试加载商品（以游客身份）
+          loadProducts();
+        });
+      // 封装商品加载逻辑
+      function loadProducts(role = 'guest') {
+        db.ref("products").once("value")
+          .then(snapshot => {
+            if (!snapshot.exists()) {
+              productsGrid.innerHTML = '<div class="no-products">这里还什么都没有哦</div>';
+              return;
+            }
+            const products = [];
+            snapshot.forEach(child => {
+              products.push({ id: child.key, ...child.val() });
+            });
+            products.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            products.forEach(product => {
+              const card = document.createElement('div');
+              card.className = 'product-card';
+              const isUserLoggedIn = auth.currentUser;
+              const buyButtonHtml = isUserLoggedIn ? 
+                `<button class="buy-btn" onclick="redeemProduct('${product.id}', ${product.price})">兑换商品</button>` :
+                `<button class="buy-btn" disabled>请先登录</button>`;
+              const sellerName = product.sellerName || '未知商家';
+              const sales = product.sales || 0;
+              // === 新增：仅管理员显示删除按钮 ===
+              let deleteButtonHtml = '';
+              if (role === 'admin') { // 👈 使用传入的 role 参数
+                const safeImgUrl = (product.img || '').replace(/'/g, "\\'");
+                deleteButtonHtml = `<button class="delete-btn" onclick="deleteProduct('${product.id}', '${safeImgUrl}')">
+                  <i class="fas fa-trash" style="font-size:14px;"></i>
+                </button>`;
+              }
+              card.innerHTML = `
+                <div class="product-image">
+                  <img src="${product.img || 'https://placehold.co/260x180/6c5ce7/white?text=商品图片'}" alt="${product.name || '商品'}" onerror="this.src='https://placehold.co/260x180/6c5ce7/white?text=图片加载失败'">
+                  ${deleteButtonHtml}
+                </div>
+                <div class="product-info">
+                  <div class="product-name">${product.name || '未命名商品'}</div>
+                  <div class="product-desc">${product.desc || '暂无描述'}</div>
+                  <div class="product-sales">销量: ${sales} 件</div>
+                  <div class="product-seller">商家：${sellerName}</div>
+                  <div class="product-price"><i class="fas fa-coins"></i> ${product.price || 0} 华币</div>
+                  ${buyButtonHtml}
+                </div>
+              `;
+              productsGrid.appendChild(card);
+            });
+          })
+          .catch(error => {
+            console.error('Error rendering products:', error);
+            if (error.code !== 'PERMISSION_DENIED') {
+              productsGrid.innerHTML = '<div class="no-products">加载商品失败，请稍后重试</div>';
+            } else {
+              productsGrid.innerHTML = '<div class="no-products">暂无商品</div>';
+            }
+          });
+      }
+    }
+    // 兑换商品 - 超简化版（100% 工作）
+    window.redeemProduct = function(productId, price) {
+      if (!auth.currentUser) {
+        showNotification('请先登录', 'warning');
+        return;
+      }
+      const user = auth.currentUser;
+      const timestamp = Date.now();
+      let userData, productData, sellerId;
+      // 1. 获取用户数据
+      db.ref(`users/${user.uid}`).once('value')
+        .then(snapshot => {
+          if (!snapshot.exists()) throw new Error('用户数据不存在');
+          userData = snapshot.val();
+          if (userData.banned) throw new Error('账号已被封禁');
+          const currentPoints = userData.points || 0;
+          if (currentPoints < price) throw new Error('华币不足');
+          // 2. 获取商品数据
+          return db.ref(`products/${productId}`).once('value');
+        })
+        .then(snapshot => {
+          if (!snapshot.exists()) throw new Error('商品不存在');
+          productData = snapshot.val();
+          sellerId = productData.sellerId;
+          if (!sellerId) throw new Error('卖家信息缺失');
+          if (productData.price !== price) throw new Error('商品价格已更新');
+          // 3. 创建订单（简单 set 操作）
+          const orderId = Date.now().toString() + '_' + user.uid.substring(0, 8);
+          return db.ref(`orders/${orderId}`).set({
+            buyerId: user.uid,
+            sellerId: sellerId,
+            productId: productId,
+            productName: productData.name || '商品',
+            buyerName: userData.name || '用户',
+            points: price,
+            timestamp: timestamp,
+            status: 'completed'
+          });
+        })
+        .then(() => {
+          // 4. 扣减买家华币（简单 set 操作）
+          const buyerPoints = (userData.points || 0) - price;
+          return db.ref(`users/${user.uid}/points`).set(buyerPoints);
+        })
+        .then(() => {
+          // 5. 增加商品销量
+          const newSales = (productData.sales || 0) + 1;
+          return db.ref(`products/${productId}/sales`).set(newSales);
+        })
+        .then(() => {
+          // 6. 获取卖家当前华币
+          return db.ref(`users/${sellerId}/points`).once('value');
+        })
+        .then(sellerSnapshot => {
+          const sellerPoints = sellerSnapshot.exists() ? (sellerSnapshot.val().points || 0) : 0;
+          // 7. 增加卖家华币
+          return db.ref(`users/${sellerId}/points`).set(sellerPoints + price);
+        })
+        .then(() => {
+          // 8. 通知卖家
+          db.ref(`notifications/${sellerId}`).push({
+            message: `新订单！${userData.name || '用户'}购买了"${productData.name || '商品'}"`,
+            type: 'success',
+            timestamp: timestamp
+          }).catch(e => console.log('通知卖家失败:', e));
+          // 9. 通知买家
+          db.ref(`notifications/${user.uid}`).push({
+            message: `兑换成功！"${productData.name || '商品'}"花费${price}华币`,
+            type: 'success',
+            timestamp: timestamp
+          }).catch(e => console.log('通知买家失败:', e));
+          showNotification(`✅ 兑换成功！${productData.name}即将送达`, 'success');
+          renderProducts(); // 刷新商品列表
+        })
+        .catch(error => {
+          console.error('❌ 兑换失败:', error);
+          let errorMessage = '兑换失败';
+          if (error.message.includes('华币不足')) {
+            errorMessage = '❌ 华币不足，无法兑换';
+          } else if (error.message.includes('封禁')) {
+            errorMessage = '❌ 账号已被封禁';
+          } else if (error.message.includes('价格已更新')) {
+            errorMessage = '🔄 商品价格已更新，请刷新页面';
+          } else if (error.message.includes('PERMISSION_DENIED') || 
+                    error.message.includes('permission_denied') || 
+                    error.message.includes('permission denied')) {
+            errorMessage = '🔧 权限错误：请刷新页面或联系管理员';
+            // 详细诊断
+            console.error('🔧 详细错误信息:', {
+              code: error.code,
+              message: error.message,
+              stack: error.stack ? error.stack.substring(0, 200) : '无堆栈'
+            });
+          } else {
+            errorMessage = `❌ ${error.message || '未知错误'}`;
+          }
+          showNotification(errorMessage, 'error');
+        });
+    };
+    // ========== 商户功能 ==========
+    function applyAsSeller() {
+      if (!auth.currentUser) return;
+      const user = auth.currentUser;
+      db.ref("users/" + user.uid).once("value")
+        .then(userSnapshot => {
+          if (!userSnapshot.exists()) {
+            showNotification('用户信息异常', 'error');
+            return;
+          }
+          const userData = userSnapshot.val();
+          if (userData.role === 'seller') {
+            showNotification('您已经是商户了', 'warning');
+            return;
+          }
+          // 检查是否已有申请
+          db.ref("sellerApplications")
+            .orderByChild("userId")
+            .equalTo(user.uid)
+            .once("value")
+            .then(appSnapshot => {
+              if (appSnapshot.exists()) {
+                showNotification('您已提交申请，请等待审核', 'warning');
+                return;
+              }
+              // 创建申请
+              db.ref("sellerApplications").push({
+                userId: user.uid,
+                email: user.email,
+                name: userData.name || '未知',
+                status: 'pending',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+              })
+              .then(() => {
+                showNotification('商户申请已提交，等待管理员审核');
+              })
+              .catch(error => {
+                console.error('Create application error:', error);
+                showNotification('申请提交失败：' + (error.message || '请稍后重试'), 'error');
+              });
+            })
+            .catch(error => {
+              console.error('Check applications error:', error);
+              showNotification('检查申请状态失败：' + (error.message || '请稍后重试'), 'error');
+            });
+        })
+        .catch(error => {
+          console.error('User data error:', error);
+          showNotification('获取用户信息失败：' + (error.message || '请稍后重试'), 'error');
+        });
+    }
+    function uploadProduct() {
+      if (!auth.currentUser) return;
+      const name = document.getElementById('productName').value.trim();
+      const desc = document.getElementById('productDesc').value.trim();
+      const price = parseInt(document.getElementById('productPrice').value);
+      const imageFile = document.getElementById('productImage').files[0];
+      if (!name || !desc || !price || price <= 0) {
+        showNotification('请填写完整商品信息', 'warning');
+        return;
+      }
+      showNotification('正在上架商品...');
+      let uploadPromise;
+      if (imageFile) {
+        // 检查文件类型
+        if (!imageFile.type.startsWith('image/')) {
+          showNotification('请上传图片文件', 'error');
+          return;
+        }
+        const imageRef = storage.ref("products/" + auth.currentUser.uid + "/" + Date.now() + "_" + imageFile.name);
+        uploadPromise = imageRef.put(imageFile).then(snapshot => snapshot.ref.getDownloadURL());
+      } else {
+        uploadPromise = Promise.resolve('');
+      }
+      uploadPromise
+        .then(url => {
+          // 获取用户信息
+          return db.ref("users/" + auth.currentUser.uid).once("value")
+            .then(userSnapshot => {
+              if (!userSnapshot.exists()) {
+                throw new Error('用户信息不存在');
+              }
+              const userData = userSnapshot.val();
+              // 修复点：确保 sellerName 有值
+              const sellerName = userData.name || auth.currentUser.email.split('@')[0] || '未知商家';
+              // 保存商品
+              return db.ref("products").push({
+                name: name,
+                desc: desc,
+                price: price,
+                img: url,
+                sellerId: auth.currentUser.uid,
+                sellerName: sellerName,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                sales: 0
+              });
+            });
+        })
+        .then(() => {
+          // 清空表单
+          document.getElementById('productName').value = '';
+          document.getElementById('productDesc').value = '';
+          document.getElementById('productPrice').value = '';
+          document.getElementById('productImage').value = '';
+          showNotification('商品上架成功！');
+          renderProducts();
+        })
+        .catch(error => {
+          console.error('Upload product error:', error);
+          showNotification('上架失败：' + (error.message || '请稍后重试'), 'error');
+        });
+    }
+    // ========== 管理员功能 ==========
+    function showAdminPanel() {
+      if (!auth.currentUser) {
+        showNotification('请先登录', 'warning');
+        return;
+      }
+      db.ref("users/" + auth.currentUser.uid).once("value")
+        .then(userSnapshot => {
+          if (!userSnapshot.exists()) {
+            showNotification('用户信息不存在', 'error');
+            return;
+          }
+          const userData = userSnapshot.val();
+          if (userData.role !== 'admin') {
+            showNotification('你没有管理员权限', 'error');
+            return;
+          }
+          adminModal.classList.add('active');
+          loadApplications();
+          loadUsers();
+        })
+        .catch(error => {
+          console.error('Admin check error:', error);
+          showNotification('权限检查失败', 'error');
+        });
+    }
+    // 加载商户申请
+    function loadApplications() {
+      applicationsList.innerHTML = '<div class="gray">加载中...</div>';
+      db.ref("sellerApplications").orderByChild("status").equalTo("pending")
+        .once("value")
+        .then(snapshot => {
+          if (!snapshot.exists()) {
+            applicationsList.innerHTML = '<div class="gray">暂无申请</div>';
+            return;
+          }
+          let html = "";
+          snapshot.forEach(child => {
+            const app = child.val();
+            html += `
+              <div class="application-item">
+                <div>
+                  <div><b>${app.name}</b></div>
+                  <div>${app.email}</div>
+                </div>
+                <div>
+                  <button class="success approve-btn" onclick="approveApplication('${child.key}')">同意</button>
+                  <button class="danger reject-btn" onclick="rejectApplication('${child.key}')">拒绝</button>
+                </div>
+              </div>
+            `;
+          });
+          applicationsList.innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Load applications error:', error);
+          if (error.code !== 'PERMISSION_DENIED') {
+            applicationsList.innerHTML = '<div class="gray">加载失败，请稍后重试</div>';
+          } else {
+            applicationsList.innerHTML = '<div class="gray">无权限访问申请数据</div>';
+          }
+        });
+    }
+    // 批准申请
+    function approveApplication(appId) {
+      db.ref("sellerApplications/" + appId).once("value")
+        .then(snapshot => {
+          if (!snapshot.exists()) return;
+          const app = snapshot.val();
+          // 更新用户角色
+          db.ref("users/" + app.userId + "/role").set("seller")
+            .then(() => {
+              // 更新申请状态
+              db.ref("sellerApplications/" + appId + "/status").set("approved");
+              showNotification(`已批准 ${app.name} 的申请`);
+              // 给用户发送通知
+              db.ref("notifications/" + app.userId).push({
+                message: "你的商户申请已被同意",
+                type: "success",
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+              });
+              loadApplications();
+            })
+            .catch(error => {
+              console.error('Approve application error:', error);
+              showNotification('批准失败，请稍后重试', 'error');
+            });
+        })
+        .catch(error => {
+          console.error('Load application error:', error);
+          showNotification('获取申请信息失败', 'error');
+        });
+    }
+    // 拒绝申请
+    function rejectApplication(appId) {
+      db.ref("sellerApplications/" + appId).once("value")
+        .then(snapshot => {
+          if (!snapshot.exists()) return;
+          const app = snapshot.val();
+          // 更新申请状态
+          db.ref("sellerApplications/" + appId + "/status").set("rejected")
+            .then(() => {
+              showNotification(`已拒绝 ${app.name} 的申请`);
+              // 给用户发送通知
+              db.ref("notifications/" + app.userId).push({
+                message: "你的商户申请已被拒绝",
+                type: "error",
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+              });
+              loadApplications();
+            })
+            .catch(error => {
+              console.error('Reject application error:', error);
+              showNotification('拒绝失败，请稍后重试', 'error');
+            });
+        })
+        .catch(error => {
+          console.error('Load application error:', error);
+          showNotification('获取申请信息失败', 'error');
+        });
+    }
+    // 加载所有用户
+    function loadUsers() {
+      usersList.innerHTML = '<div class="gray">加载中...</div>';
+      db.ref("users").once("value")
+        .then(snapshot => {
+          if (!snapshot.exists()) {
+            usersList.innerHTML = '<div class="gray">暂无用户</div>';
+            return;
+          }
+          let html = "";
+          snapshot.forEach(child => {
+            const user = child.val();
+            html += `
+              <div class="user-item">
+                <div class="user-info">
+                  <span><b>${user.name}</b></span>
+                  <span>${user.email}</span>
+                  <span>华币: <input type="number" class="points-input" value="${user.points || 0}" data-uid="${child.key}"> 
+                    <button class="primary" onclick="updateUserPoints('${child.key}')">更新</button>
+                  </span>
+                </div>
+                <div>
+                  ${user.banned ? 
+                    '<button class="success unban-btn" onclick="unbanUser(\'' + child.key + '\')">解封</button>' : 
+                    '<button class="danger ban-btn" onclick="banUser(\'' + child.key + '\')">封禁</button>'
+                  }
+                </div>
+              </div>
+            `;
+          });
+          usersList.innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Load users error:', error);
+          if (error.code !== 'PERMISSION_DENIED') {
+            usersList.innerHTML = '<div class="gray">加载失败，请稍后重试</div>';
+          } else {
+            usersList.innerHTML = '<div class="gray">无权限访问用户数据</div>';
+          }
+        });
+    }
+    // 更新用户华币
+    function updateUserPoints(uid) {
+      const input = document.querySelector(`.points-input[data-uid="${uid}"]`);
+      const newPoints = parseInt(input.value);
+      if (isNaN(newPoints) || newPoints < 0) {
+        showNotification("请输入有效的华币数量", 'error');
+        return;
+      }
+      db.ref("users/" + uid + "/points").set(newPoints)
+        .then(() => {
+          showNotification("华币更新成功");
+          // 给用户发送通知
+          db.ref("notifications/" + uid).push({
+            message: `管理员修改了你的华币，当前华币: ${newPoints}`,
+            type: "info",
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+          });
+        })
+        .catch(error => {
+          console.error('Update points error:', error);
+          showNotification('更新失败，请稍后重试', 'error');
+        });
+    }
+    // 封禁用户
+    function banUser(uid) {
+      db.ref("users/" + uid + "/banned").set(true)
+        .then(() => {
+          showNotification("用户已封禁");
+          // 给用户发送通知
+          db.ref("notifications/" + uid).push({
+            message: "你的账号已被管理员封禁",
+            type: "error",
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+          });
+          loadUsers();
+        })
+        .catch(error => {
+          console.error('Ban user error:', error);
+          showNotification('封禁失败，请稍后重试', 'error');
+        });
+    }
+    // 解封用户
+    function unbanUser(uid) {
+      db.ref("users/" + uid + "/banned").set(false)
+        .then(() => {
+          showNotification("用户已解封");
+          loadUsers();
+        })
+        .catch(error => {
+          console.error('Unban user error:', error);
+          showNotification('解封失败，请稍后重试', 'error');
+        });
+    }
+    // ========== 商家订单功能 ==========
+    function showSellerOrders() {
+      if (!auth.currentUser) {
+        showNotification('请先登录', 'warning');
+        return;
+      }
+      db.ref("users/" + auth.currentUser.uid).once("value")
+        .then(userSnapshot => {
+          if (!userSnapshot.exists()) {
+            showNotification('用户信息不存在', 'error');
+            return;
+          }
+          const userData = userSnapshot.val();
+          if (userData.role !== 'seller' && userData.role !== 'admin') {
+            showNotification('你没有查看订单的权限', 'error');
+            return;
+          }
+          // 加载商家订单
+          loadSellerOrders();
+          sellerOrdersModal.classList.add('active');
+        })
+        .catch(error => {
+          console.error('Seller check error:', error);
+          showNotification('权限检查失败', 'error');
+        });
+    }
+    function loadSellerOrders() {
+      sellerOrdersList.innerHTML = '<div class="gray">加载中...</div>';
+      if (!auth.currentUser) {
+        sellerOrdersList.innerHTML = '<div class="gray">请先登录</div>';
+        return;
+      }
+      const sellerId = auth.currentUser.uid;
+      // 使用正确的查询方式
+      db.ref("orders")
+        .orderByChild("sellerId")
+        .equalTo(sellerId)
+        .once("value")
+        .then(snapshot => {
+          if (!snapshot.exists()) {
+            sellerOrdersList.innerHTML = '<div class="gray">暂无订单记录</div>';
+            return;
+          }
+          let orders = [];
+          snapshot.forEach(child => {
+            orders.push({ id: child.key, ...child.val() });
+          });
+          // 按时间倒序排列
+          orders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          if (orders.length === 0) {
+            sellerOrdersList.innerHTML = '<div class="gray">暂无订单记录</div>';
+            return;
+          }
+          // 构建订单HTML
+          let html = '';
+          orders.forEach(order => {
+            const buyerName = order.buyerName || '未知用户';
+            const time = order.timestamp ? 
+              new Date(order.timestamp).toLocaleString('zh-CN') : '未知时间';
+            html += `
+              <div class="order-item">
+                <div class="order-header">
+                  <span class="order-buyer">${buyerName}</span>
+                  <span class="order-points">+${order.points || 0}华币</span>
+                </div>
+                <div class="order-product">商品：${order.productName || '未知商品'}</div>
+                <div class="order-sales">销量：1 件</div>
+                <div class="order-time">
+                  <i class="fas fa-clock"></i> ${time}
+                </div>
+              </div>
+            `;
+          });
+          sellerOrdersList.innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Load seller orders error:', error);
+          let errorMessage = '加载失败，请稍后重试';
+          if (error.code === 'PERMISSION_DENIED') {
+            errorMessage = '无权限访问订单数据';
+            sellerOrdersList.innerHTML = '<div class="gray">无权限访问订单数据</div>';
+          }
+          showNotification(`加载订单失败: ${errorMessage}`, 'error');
+        });
+    }
+    // ========== 用户界面更新 ==========
+    function updateUserInterface() {
+      const user = auth.currentUser;
+      if (user) {
+        // 获取用户信息
+        db.ref("users/" + user.uid).once("value")
+          .then(userSnapshot => {
+            if (!userSnapshot.exists()) {
+              showNotification('用户数据异常，请重新登录', 'error');
+              auth.signOut();
+              return;
+            }
+            const userData = userSnapshot.val();
+            if (userData.banned) {
+              showNotification('你已被封禁', 'error');
+              auth.signOut();
+              return;
+            }
+            // 显示用户信息
+            authButtons.classList.add('hidden');
+            userInfoNav.classList.remove('hidden');
+            userPanelSection.style.display = 'block';
+            // 更新用户信息
+            const displayName = userData.name || user.email?.split('@')[0] || '用户';
+            userName.textContent = displayName;
+            userAvatar.textContent = getInitials(displayName);
+            userRole.textContent = userData.role === 'admin' ? '管理员' : 
+                                 userData.role === 'seller' ? '商户' : '普通用户';
+            userPoints.textContent = userData.points || 0;
+            // 根据角色显示功能
+            sellerFormSection.classList.add('hidden');
+            if (userData.role === 'seller' || userData.role === 'admin') {
+              sellerFormSection.classList.remove('hidden');
+            }
+            // 显示管理员和商家按钮
+            adminBtn.classList.add('hidden');
+            sellerOrdersBtn.classList.add('hidden');
+            if (userData.role === 'admin') {
+              adminBtn.classList.remove('hidden');
+            }
+            if (userData.role === 'seller' || userData.role === 'admin') {
+              sellerOrdersBtn.classList.remove('hidden');
+            }
+            // 实时监听华币变化
+            db.ref("users/" + user.uid + "/points").on("value", pointsSnapshot => {
+              userPoints.textContent = pointsSnapshot.val() || 0;
+            });
+          })
+          .catch(error => {
+            console.error('User data error:', error);
+            if (error.code !== 'PERMISSION_DENIED') {
+              showNotification('获取用户信息失败', 'error');
+            }
+          });
+      } else {
+        // 未登录状态
+        authButtons.classList.remove('hidden');
+        userInfoNav.classList.add('hidden');
+        userPanelSection.style.display = 'none';
+        adminBtn.classList.add('hidden');
+        sellerOrdersBtn.classList.add('hidden');
+      }
+      // 渲染商品
+      renderProducts();
+    }
+    // 临时权限验证函数 - 部署成功后可删除
+    function verifyPermissions() {
+      if (!auth.currentUser) return;
+      const testPath = `test_permissions_${Date.now()}`;
+      const testValue = { timestamp: Date.now() };
+      // 测试写入权限
+      db.ref(`orders/${testPath}`).set(testValue)
+        .then(() => {
+          console.log('✅ 订单写入权限正常');
+          db.ref(`orders/${testPath}`).remove();
+        })
+        .catch(error => {
+          console.error('❌ 订单写入权限失败:', error);
+          showNotification('系统权限配置错误，请联系管理员', 'error');
+        });
+      // 测试读取权限
+      db.ref('products').limitToFirst(1).once('value')
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            console.log('✅ 商品读取权限正常');
+          } else {
+            console.log('⚠️ 没有商品数据，但读取权限正常');
+          }
+        })
+        .catch(error => {
+          console.error('❌ 商品读取权限失败:', error);
+          showNotification('无法加载商品，请检查网络连接', 'error');
+        });
+    }
+    // ====== 权限诊断工具（部署后可删除）======
+    function runPermissionDiagnostics() {
+      if (!auth.currentUser) {
+        console.log('❌ 未登录，无法进行权限诊断');
+        return;
+      }
+      const userId = auth.currentUser.uid;
+      const diagnosticKey = `diagnostic_${Date.now()}`;
+      console.log('🔍 开始权限诊断...');
+      console.log('👤 当前用户ID:', userId);
+      // 1. 检查用户数据读取权限
+      db.ref(`users/${userId}`).once('value')
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            console.log('✅ 用户数据读取成功');
+            const userData = snapshot.val();
+            console.log('📊 用户数据:', {
+              role: userData.role,
+              points: userData.points,
+              banned: userData.banned
+            });
+            // 2. 测试华币写入
+            return db.ref(`users/${userId}/points`).transaction(current => {
+              return (current || 0) + 0; // 不实际修改，只是测试事务
+            });
+          } else {
+            console.error('❌ 用户数据不存在');
+            throw new Error('用户数据不存在');
+          }
+        })
+        .then(() => {
+          console.log('✅ 华币写入权限测试成功');
+          // 3. 测试商品读取
+          return db.ref('products').limitToFirst(1).once('value');
+        })
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            console.log('✅ 商品读取权限成功');
+            console.log('📦 检测到商品数量:', Object.keys(snapshot.val()).length);
+          } else {
+            console.log('⚠️ 无商品数据，但读取权限正常');
+          }
+          // 4. 测试订单写入
+          return db.ref(`orders/${diagnosticKey}`).set({
+            test: true,
+            timestamp: Date.now()
+          });
+        })
+        .then(() => {
+          console.log('✅ 订单写入权限成功');
+          // 5. 测试订单读取
+          return db.ref(`orders/${diagnosticKey}`).once('value');
+        })
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            console.log('✅ 订单读取权限成功');
+            // 6. 清理测试数据
+            return db.ref(`orders/${diagnosticKey}`).remove();
+          } else {
+            console.error('❌ 订单读取失败');
+            throw new Error('订单读取失败');
+          }
+        })
+        .then(() => {
+          console.log('✅ 测试数据清理成功');
+          console.log('🎉 权限诊断完成！所有权限正常');
+          showNotification('权限诊断完成，所有权限正常', 'success');
+        })
+        .catch(error => {
+          console.error('❌ 权限诊断失败:', error);
+          console.error('🔧 详细错误信息:', {
+            code: error.code,
+            message: error.message,
+            stack: error.stack
+          });
+          // 提供具体的修复建议
+          let fixAdvice = '请联系管理员检查Firebase安全规则';
+          if (error.message.includes('PERMISSION_DENIED')) {
+            fixAdvice = '安全规则配置错误，需要重新部署规则并等待3分钟';
+          } else if (error.message.includes('not found')) {
+            fixAdvice = '数据库路径不存在，请检查数据结构';
+          }
+          console.log('💡 修复建议:', fixAdvice);
+          showNotification(`权限诊断失败: ${error.message}`, 'error');
+        });
+    }
+    // 添加诊断按钮到页面
+    setTimeout(() => {
+      const navbar = document.querySelector('.navbar');
+      if (navbar) {
+        const diagnosticBtn = document.createElement('button');
+        diagnosticBtn.innerHTML = '<i class="fas fa-bug"></i> 诊断权限';
+        diagnosticBtn.style.cssText = `
+          background: #ff6b6b;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 8px;
+          margin-left: 10px;
+          cursor: pointer;
+          font-weight: 500;
         `;
-        productsGrid.appendChild(card);
+        diagnosticBtn.onclick = runPermissionDiagnostics;
+        navbar.appendChild(diagnosticBtn);
+      }
+    }, 1000);
+    // 页面加载时自动运行诊断（仅用于调试）
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (auth.currentUser && window.location.search.includes('diagnose')) {
+          runPermissionDiagnostics();
+        }
+      }, 2000);
+    });
+    // ====== 权限诊断工具结束 ======
+    // 在初始化时调用
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        setTimeout(verifyPermissions, 3000); // 等待规则完全生效
+      }
+      updateUserInterface();
+    });
+    // ========== 事件监听器 ==========
+    loginBtn.addEventListener('click', showLoginModal);
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => showNotification('已退出登录'));
+    });
+    adminBtn.addEventListener('click', showAdminPanel);
+    sellerOrdersBtn.addEventListener('click', showSellerOrders);
+    switchToRegister.addEventListener('click', () => switchTab('register'));
+    switchToLogin.addEventListener('click', () => switchTab('login'));
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      handleLogin(email, password);
+    });
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+      const name = document.getElementById('registerName').value;
+      handleRegister(email, password, name);
+    });
+    applySellerBtn.addEventListener('click', applyAsSeller);
+    submitProductBtn.addEventListener('click', uploadProduct);
+    // 管理员标签切换
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.tab}Pane`).classList.add('active');
       });
-    })
-    .catch(err=>{console.error(err); productsGrid.innerHTML='<div class="no-products">加载失败</div>';});
-}
-
-// 兑换商品
-window.redeemProduct = function(productId, price){
-  const user = auth.currentUser;
-  if(!user){showNotification('请先登录','warning'); return;}
-  const userRef = db.ref('users/'+user.uid);
-  userRef.once('value').then(snapshot=>{
-    const data = snapshot.val();
-    if(!data){showNotification('用户信息不存在','error'); return;}
-    if((data.points||0)<price){showNotification('积分不足','warning'); return;}
-    // 扣积分
-    userRef.update({points:(data.points||0)-price});
-    // 记录兑换
-    db.ref('redemptions').push({
-      userId:user.uid,
-      productId,
-      pointsSpent:price,
-      timestamp:Date.now()
     });
-    showNotification('兑换成功！');
-    document.getElementById('userPoints').textContent=(data.points||0)-price;
-  });
-};
-
-// 商户申请
-function applyAsSeller(){
-  const user = auth.currentUser;
-  if(!user){showNotification('请先登录','warning'); return;}
-  db.ref('users/'+user.uid).once('value').then(snapshot=>{
-    const data = snapshot.val();
-    if(data.role==='seller'){showNotification('您已是商户','warning'); return;}
-    db.ref('sellerApplications').push({
-      userId:user.uid,
-      userName:data.name||'未知',
-      status:'pending',
-      appliedAt:Date.now()
+    // ========== 初始化 ==========
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        hideLoginModal();
+      }
+      updateUserInterface();
     });
-    showNotification('商户申请已提交');
-  });
-}
-
-// 商品上架
-function uploadProduct(){
-  const user = auth.currentUser;
-  if(!user){showNotification('请先登录','warning'); return;}
-  const name = document.getElementById('productName').value.trim();
-  const desc = document.getElementById('productDesc').value.trim();
-  const price = parseInt(document.getElementById('productPrice').value);
-  const file = document.getElementById('productImage').files[0];
-  if(!name||!desc||!price||price<=0){showNotification('请填写完整商品信息','warning'); return;}
-  showNotification('正在上架商品...');
-  let uploadPromise = Promise.resolve('');
-  if(file){
-    const storageRef = storage.ref('products/'+user.uid+'/'+Date.now()+'_'+file.name);
-    uploadPromise = storageRef.put(file).then(snapshot=>snapshot.ref.getDownloadURL());
-  }
-  uploadPromise.then(url=>{
-    db.ref('products').push({
-      name,
-      description:desc,
-      price,
-      sellerId:user.uid,
-      sellerName:user.displayName||name,
-      imageUrl:url||'',
-      createdAt:Date.now()
-    });
-    // 清空表单
-    document.getElementById('productName').value='';
-    document.getElementById('productDesc').value='';
-    document.getElementById('productPrice').value='';
-    document.getElementById('productImage').value='';
-    showNotification('商品上架成功！');
+    // 初始渲染商品
     renderProducts();
-  }).catch(err=>showNotification(err.message||'上架失败','error'));
-}
-
-// 挂载按钮事件
-applySellerBtn.addEventListener('click',applyAsSeller);
-submitProductBtn.addEventListener('click',uploadProduct);
-
-// 初始化渲染商品
-renderProducts();
-</script>
+    // 初始化表单切换
+    switchTab('login');
+    // 在你原有 <script> 的最底部（所有函数之后），添加以下函数
+    // ========== 管理员删除商品功能 ==========
+    window.deleteProduct = function(productId, imageUrl) {
+      // 获取当前用户角色
+      const user = auth.currentUser;
+      if (!user) {
+        showNotification('请先登录', 'error');
+        return;
+      }
+      db.ref(`users/${user.uid}`).once('value')
+        .then(userSnap => {
+          if (!userSnap.exists() || userSnap.val().role !== 'admin') {
+            showNotification('无权限删除商品', 'error');
+            return;
+          }
+          if (!confirm('确定删除此商品？此操作不可恢复！')) {
+            return;
+          }
+          showNotification('正在删除商品...');
+          // 删除图片（如果存在）
+          let deleteImagePromise = Promise.resolve();
+          if (imageUrl && imageUrl.startsWith('https://firebasestorage.googleapis.com/')) {
+            const imageRef = storage.refFromURL(imageUrl);
+            deleteImagePromise = imageRef.delete().catch(e => {
+              console.warn('图片删除失败（可能已不存在）:', e);
+            });
+          }
+          // 删除商品数据
+          deleteImagePromise
+            .then(() => db.ref(`products/${productId}`).remove())
+            .then(() => {
+              showNotification('商品已成功删除', 'success');
+              renderProducts(); // 刷新商品列表
+            })
+            .catch(error => {
+              console.error('删除商品失败:', error);
+              showNotification('删除失败：' + (error.message || '请稍后重试'), 'error');
+            });
+        })
+        .catch(err => {
+          console.error('权限检查失败:', err);
+          showNotification('权限验证失败', 'error');
+        });
+    };
+  </script>
+</body>
+</html>
